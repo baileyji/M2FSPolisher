@@ -48,6 +48,13 @@ PID::PID(double* Input, double* Output, double* Setpoint,
 
 }
 
+bool PID::WillCompute()
+{
+    if(!inAuto) return false;
+    unsigned long now = millis();
+    unsigned long timeChange = (now - lastTime);
+    return timeChange>=SampleTime;
+}
 
 /* Compute() **********************************************************************
  *     This, as they say, is where the magic happens.  this function should be called
@@ -89,7 +96,7 @@ bool PID::Compute()
       /*Remember some variables for next time*/
       lastInput = input;
       lastTime = now;
-	    return true;
+      return true;
    }
    else return false;
 }

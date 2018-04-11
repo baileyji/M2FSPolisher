@@ -136,6 +136,13 @@ boolean ButtonsClass::clicked(byte buttonId)
   return changed(buttonId) && down(buttonId);
 }
 
+boolean ButtonsClass::clickedsince(byte buttonId)
+{
+    bool clicked = changed(buttonId) && down(buttonId);
+    if (clicked) clearChangeFlag(buttonId);
+    return clicked;
+}
+
 boolean ButtonsClass::released(byte buttonId)
 {
   return changed(buttonId) && !down(buttonId);

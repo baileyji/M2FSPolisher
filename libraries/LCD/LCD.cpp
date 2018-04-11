@@ -1,13 +1,13 @@
 #include "LCD.h"
 
-LCD::LCD() : Serial1()
+LCD::LCD()
 {
-    0;
+
 }
 
 void LCD::init()
 {
-    begin(9600);
+    Serial1.begin(9600);
     turnDisplayOn();
     backlight(29);
     underlineCursorOn();
@@ -17,100 +17,100 @@ void LCD::init()
 void LCD::clearScreen()
 {
     //clears the screen, you will use this a lot!
-    write(0xFE);
-    write(0x01);
+    Serial1.write(0xFE);
+    Serial1.write(0x01);
 }
 
 void LCD::selectLineOne()
 {
     //puts the cursor at line 0 char 0.
-    write(0xFE); //command flag
-    write(128); //position
+    Serial1.write(0xFE); //command flag
+    Serial1.write(128); //position
 }
 
 void LCD::selectLineTwo()
 {
     //puts the cursor at line 0 char 0.
-    write(0xFE); //command flag
-    write(192); //position
+    Serial1.write(0xFE); //command flag
+    Serial1.write(192); //position
 }
 
 void LCD::moveCursorRightOne()
 {
     //moves the cursor right one space
-    write(0xFE); //command flag
-    write(20); // 0x14
+    Serial1.write(0xFE); //command flag
+    Serial1.write(20); // 0x14
 }
 
 void LCD::moveCursorLeftOne()
 {
     //moves the cursor left one space
-    write(0xFE); //command flag
-    write(16); // 0x10
+    Serial1.write(0xFE); //command flag
+    Serial1.write(16); // 0x10
 }
 
 void LCD::scrollRight()
 {
     //same as moveCursorRightOne
-    write(0xFE); //command flag
-    write(20); // 0x14
+    Serial1.write(0xFE); //command flag
+    Serial1.write(20); // 0x14
 }
 
 void LCD::scrollLeft()
 {
     //same as moveCursorLeftOne
-    write(0xFE); //command flag
-    write(24); // 0x18
+    Serial1.write(0xFE); //command flag
+    Serial1.write(24); // 0x18
 }
 
 void LCD::turnDisplayOff()
 {
     //this tunrs the display off, but leaves the backlight on.
-    write(0xFE); //command flag
-    write(8); // 0x08
+    Serial1.write(0xFE); //command flag
+    Serial1.write(8); // 0x08
 }
 
 void LCD::turnDisplayOn()
 {
     //this turns the dispaly back ON
-    write(0xFE); //command flag
-    write(12); // 0x0C
+    Serial1.write(0xFE); //command flag
+    Serial1.write(12); // 0x0C
 }
 
 void LCD::underlineCursorOn()
 {
     //turns the underline cursor on
-    write(0xFE); //command flag
-    write(14); // 0x0E
+    Serial1.write(0xFE); //command flag
+    Serial1.write(14); // 0x0E
 }
 
 
 void LCD::underlineCursorOff()
 {
     //turns the underline cursor off
-    write(0xFE); //command flag
-    write(12); // 0x0C
+    Serial1.write(0xFE); //command flag
+    Serial1.write(12); // 0x0C
 }
 
 void LCD::boxCursorOn()
 {
     //this turns the box cursor on
-    write(0xFE); //command flag
-    write(13); // 0x0D
+    Serial1.write(0xFE); //command flag
+    Serial1.write(13); // 0x0D
 }
 
 void LCD::boxCursorOff()
 {
     //this turns the box cursor off
-    write(0xFE); //command flag
-    write(12); // 0x0C
+    Serial1.write(0xFE); //command flag
+    Serial1.write(12); // 0x0C
 }
 
 void LCD::toggleSplash()
 {
     //this toggles the spalsh screenif off send this to turn onif on send this to turn off
-    write(0x7C); //command flag = 124 dec
-    write(9); // 0x09
+    Serial1.write(0x7C); //command flag = 124 dec
+    Serial1.write(9); // 0x09
 }
 
 void LCD::backlight(unsigned int brightness)// 0 = OFF, 29 = Fully ON, everything inbetween = varied brightnbess
@@ -118,9 +118,22 @@ void LCD::backlight(unsigned int brightness)// 0 = OFF, 29 = Fully ON, everythin
     brightness = (brightness>29) ? 29:brightness;
         
     //this function takes an int between 128-157 and turns the backlight on accordingly
-    write(0x7C); //NOTE THE DIFFERENT COMMAND FLAG = 124 dec
-    write(brightness+128); // any value between 128 and 157 or 0x80 and 0x9D
+    Serial1.write(0x7C); //NOTE THE DIFFERENT COMMAND FLAG = 124 dec
+    Serial1.write(brightness+128); // any value between 128 and 157 or 0x80 and 0x9D
 }
+
+void LCD::display(char cstr[])
+{
+    clearScreen();
+    selectLineOne();
+    Serial1.write(cstr);
+}
+
+void LCD::write(char cstr[])
+{
+    Serial1.write(cstr);
+}
+
 
 
 ////-------------------------------------------------------------------------------------------

@@ -82,6 +82,7 @@ class ButtonsClass final
      *                          was last cleared, false otherwise.
      */
     boolean clicked(byte buttonId);
+    boolean clickedsince(byte buttonId);
     
     /**
      * Returns a boolean value indicating if the user has "released" the button,
@@ -129,7 +130,7 @@ class ButtonsClass final
      * Useful to call when entering or leaving a user-interaction context so that spurious
      * button presses during the "non-interactive" phase do not trigger an unexpected action.
      */
-    void clearChangeFlag();
+void clearChangeFlag();
     
     /**
      * Clears the Change Flag on the specified button ID.

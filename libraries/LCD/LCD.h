@@ -2,7 +2,7 @@
 #define LCD_h
 #include <Arduino.h>
 
-class LCD : public Serial1
+class LCD
 {
 public:
     LCD();
@@ -25,6 +25,8 @@ public:
     void toggleSplash();
     void backlight(unsigned int brightness);
     
+    void display(char cstr[]);
+    void write(char cstr[]);
     
 };
 

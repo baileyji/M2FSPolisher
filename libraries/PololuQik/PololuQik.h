@@ -47,14 +47,12 @@
 #define QIK_CONFIG_MOTOR_M1_CURRENT_LIMIT_RESPONSE 11
 
 
-class PololuQik : public Serial
+class PololuQik
 {
   public:
     PololuQik(unsigned char resetPin, unsigned char errorPin);
 
-    void init(long speed = QIK_BAUD_RATE);
-
-    void resetQik();
+    void init(long speed);
     
     char getFirmwareVersion();
     volatile bool errorFlag;
