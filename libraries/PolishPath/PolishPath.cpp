@@ -1,8 +1,11 @@
 #include "PolishPath.h"
 
-//PolishPath::PolishPath() {
-//    percentComplete=0;
-//}
+PolishPath::PolishPath() {
+    _i=0;
+    percentComplete=0;
+    timeLeft=0;
+    last=(vec2d_t){0,0};
+}
 
 bool PolishPath::isStart() {
     return _i==0;
@@ -19,11 +22,13 @@ bool PolishPath::isPausePoint(){
 
 bool PolishPath::goalIsBehind(vec2d_t pos) {
     // does pos line beneath the axis perpendicular to the directed line from previousGoal to currentGoal that pases through currentGoal. Previous goal is taken to be the actual position at time of path start, in case of small numbers goalIsBehind will return True.
-    return false;
+    
+    //(y2-y1)(y-y2)-(x1-x2)(x-x2)
+    return (current.y-last.y)*(pos.y-current.y) - (last.x-current.x)*(pos.x-current.x) <= 0;
 }
 
 void PolishPath::stepForward(double speed) {
-    if (!isMore())  return;
+    if (!isMore()) return;
     double frac;
     _i++;
     last=current;
@@ -49,10 +54,10 @@ vec2d_t PolishPath::vTowardGoal(vec2d_t pos, double speed){
     double dy = current.y-pos.y;
     double mag;
     
-    if (abs(dx) <= POSITION_TOLERANCE)
-        dx = 0.0;
-    if (abs(dy) <= POSITION_TOLERANCE)
-        dy = 0.0;
+//    if (abs(dx) <= POSITION_TOLERANCE)
+//        dx = 0.0;
+//    if (abs(dy) <= POSITION_TOLERANCE)
+//        dy = 0.0;
     
     if ((dy==0) && (dx==0))
         return ret;
@@ -78,34 +83,50 @@ bool PolishPath::isMore() {
 }
 
 
-LemPath::LemPath(vec2d_t maxpos, unsigned int pass): PolishPath()
-{
-    _i=0;
-    if (pass==1) {
+LemPath::LemPath(char namestr[], vec2dint_t maxpos, char pass, double halfamp, double xskew): PolishPath() {
+    //The y extrema is PUCK_SIZE/2+halfamp so start pos should be based on that
+    if (pass==0) {
         startpos.x=maxpos.x/20.0;    //~2105
         startpos.y=0.6666667*maxpos.y + 3.0*COUNTS_PER_MM;
         finalpos.x=maxpos.x*0.6091;  //NB we only end based on X position
-        finalpos.y=0;
         dir=1;
-        strcpy(name, "Lem+  "); //6 char
     } else {
         startpos.x=maxpos.x*0.6091;  //~49337
         startpos.y=0.6666667*maxpos.y + 3.0*COUNTS_PER_MM - (2*LEM_SIZE+COUNTS_PER_MM+PUCK_SIZE);
-
         finalpos.x=maxpos.x/20.0;  //NB we only end based on X position
-        finalpos.y=0;
         dir=-1;
-        strcpy(name, "Lem-  "); //6 char
     }
     if (startpos.y>maxpos.y) startpos.y=maxpos.y/2L;
+    if (startpos.y<0) startpos.y=maxpos.y/2L;
+    finalpos.y=0;
+    
+    lemsize=halfamp;//LEM_SIZE;  //in counts
+    xstretch=xskew; //0; //in counts
+    
+    //68-150 over the range of possible sizes allwos even 1.6 PID updates at 75% max speed and just
+    // over 1 at full
+    //(150-68)/6.03*(lemsize-.5inches)+68
+    unsigned int period=round(13.59867*(lemsize-2069.79))+68;
+    if ((period%2)==1) period--; //even periods only
+    period = max(period,44);
+    awavenum = TWO_PI/period;
+    
+    //each loop is about loopwid wide the path is finalpos.x-startpos.x long
+    // there are period steps in each so final i is about period*(finalpos.x-startpos.x)/loopwid
+    double loopwid = (lemsize + xstretch)*0.439696;
+    nlem = (finalpos.x-startpos.x)/loopwid;
+
+    //From Mathmatica, this is about correct for parameter combinations that make sense
+    //tight 1.69249 stretched 1.69093 * PI
+    pathLength=5.3146637*lemsize*nlem;
+    finali=round(period*nlem);
+    
+    strcpy(name, namestr); //6 char
     memset(name, '\0', sizeof(name));
-    last.x=0;
-    last.y=0;   //last goal
+    
     current=startpos;
-    percentComplete=0;
-    finali=LEM_PERIOD*NLEM;
-    pathLength=1.66667*LEM_SIZE*NLEM;
-    timeLeft=0;
+    xstretch = (xstretch+lemsize)*dir/14.2899; //go ahead and precompute
+
 }
 
 vec2d_t LemPath::computePathPos() {
@@ -114,10 +135,10 @@ vec2d_t LemPath::computePathPos() {
     //B=4sqrt(2)ArcCos(-sqrt(2/3)) ~ 14.2899
     //A Cos(t)/(Sin2(t)+1) , A(Cos(t)Sin(t)/(Sin2(t)+1) + t/B)
     // Path length over 2pi is ~= 5/3 a
-    double st=sin(_i * TWO_PI_DIV_LEM_PERIOD);
-    double ct=cos(_i * TWO_PI_DIV_LEM_PERIOD)/(st*st+1.0);
-    next.x+=LEM_SIZE*(st*ct + dir*_i/14.2899);
-    next.y+=LEM_SIZE*ct;
+    double st=sin(_i * awavenum);
+    double ct=lemsize*cos(_i * awavenum)/(st*st+1.0);
+    next.x+=st*ct + _i*xstretch;
+    next.y+=ct;
     return next;
 }
 
@@ -125,36 +146,32 @@ bool LemPath::isMore() {
     //Is the current goal is the final positon
     if (_i==finali)
         return false;
-    if (abs(current.x-finalpos.x)<POSITION_TOLERANCE) {
+    if ((current.x>finalpos.x && dir>0) || (current.x<finalpos.x && dir<0)) {
         _i=finali;
         return false;
     }
     return true;
 }
 
-LinePath::LinePath(vec2d_t start, vec2d_t end) : PolishPath()
-{
-    _i=0;
-    startpos=start;
-    finalpos=end;
-    strcpy(name, "A Line"); //6 char
+LinePath::LinePath(char namestr[], vec2d_t start, vec2d_t end) : PolishPath() {
+
+    current = startpos = start;
+    finalpos = end;
+    strcpy(name, namestr); //6 char
     memset(name, '\0', sizeof(name));
-    last.x=0;
-    last.y=0;   //last goal
-    current=startpos;
-    percentComplete=0;
+
     finali=1;
-    timeLeft=0;
+
     double dx=(end.x-start.x);
     double dy=(end.y-start.y);
     pathLength=sqrt(dx*dx+dy*dy);
 }
 
-//vec2d_t LinePath::computePathPos() {
-//    return finalpos;
-//}
-//
-//bool LinePath::isMore() {
-//    return false;
-//}
+PointPath::PointPath(char namestr[], vec2d_t point) : LinePath(namestr, point, point) {
+    finali=0;
+    pathLength=0;
+}
 
+bool PointPath::isMore() {
+    return false;
+}

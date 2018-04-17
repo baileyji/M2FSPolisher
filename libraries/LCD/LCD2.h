@@ -2,6 +2,8 @@
 #define LCD2_h
 #include <Arduino.h>
 
+#define DISPLAYLEN 16
+
 class LCD2 {
     public:
         LCD2(Stream *);
