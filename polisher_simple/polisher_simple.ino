@@ -103,6 +103,7 @@ typedef struct VECTOR2D_INT32 {
 #define SPEED_TO_MMM 367.86  //convert cts/ms to mm/min
 #define SPEED_TO_QIK_X QIK_MAX_SPEED/MAX_COUNTS_PER_MS_X //convert cts/ms to ~QIK value
 #define SPEED_TO_QIK_Y QIK_MAX_SPEED/MAX_COUNTS_PER_MS_X
+#define QIK_MIN_ATTAINABLE 7
 
 //These are maximum vector speeds
 #define CALIBRATE_SPEED 8.5  //in //MarkI equiv. was about 10.09
@@ -531,6 +532,7 @@ void loop() {
                     if (currentpath->isPausePoint()) enterIdleFromRun(currentpath->isMore());
                     
                     if (currentpath->isMore() && skippedpoints==0) {
+                        
                         SerialUSB.printf("%d G:%.0f,%.0f D:%.0f,%.0f V: %.2f,%.2f QV: %.1f,%.1f\n",
                                          currentpath->_i,
                                          goalpos.x,goalpos.y, goalpos.x-xQuad.read(),goalpos.y-yQuad.read(),
@@ -555,14 +557,14 @@ void loop() {
                 pidXOut = goalvel.x*SPEED_TO_QIK_X;
                 pidYOut = goalvel.y*SPEED_TO_QIK_Y;
                 
-                /*
+                
                 if (abs(pidXOut)<QIK_MIN_ATTAINABLE && abs(pidXOut)!=0) {
                     pidXOut=pidXOut<0? -QIK_MIN_ATTAINABLE:QIK_MIN_ATTAINABLE;
                 }
                 if (abs(pidYOut)<QIK_MIN_ATTAINABLE && abs(pidYOut)!=0) {
                     pidYOut=pidYOut<0? -QIK_MIN_ATTAINABLE:QIK_MIN_ATTAINABLE;
                 }
-                */
+                
                 
                 setqikspeeds(pidXOut, pidYOut);
             }
