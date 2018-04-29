@@ -25,16 +25,22 @@ class LCD2 {
         void boxCursorOn();
         void boxCursorOff();
         void toggleSplash();
-        void backlight(unsigned int brightness);
+        void backlight(char brightness);
+    
+        void saveSplash();
+        void bootbaudreset();
+        void setbaud9600();
     
         void write(char c);
     
         void display(char cstr[]);
         void print(char cstr[]);
+        void print2(char cstr[]);
     
         #ifdef F // check to see if F() macro is available
         void display(const __FlashStringHelper *str);
         void print(const __FlashStringHelper *str);
+        void print2(const __FlashStringHelper *str);
         #endif
     
         Stream* serial;

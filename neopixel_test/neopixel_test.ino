@@ -61,7 +61,7 @@ void cmd_setled_cb(SerialCommands* sender)
     sender->GetSerial()->println(F("ERROR: X Y V"));
     return;
   }
-  v = atol(arg_str);
+  v = strtoul(arg_str, 16);
 
   matrix.setPassThruColor(v);
   matrix.drawPixel(x, y, 0);
@@ -101,6 +101,8 @@ void loop() {
 
   serial_commands.ReadSerial();
   matrix.show();
+  matrix.setPassThruColor(0xFFFFFFFF);
+  matrix.drawPixel(1, 1, 0);
   delay(100); // Delay for a period of time (in milliseconds).
 
 }

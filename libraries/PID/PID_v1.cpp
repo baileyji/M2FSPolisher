@@ -69,6 +69,9 @@ bool PID::Compute()
    unsigned long timeChange = (now - lastTime);
    if(timeChange>=SampleTime)
    {
+       
+       outputSum = *myOutput;
+       lastInput = *myInput;
       /*Compute all the working error variables*/
       double input = *myInput;
       double error = *mySetpoint - input;

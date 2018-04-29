@@ -158,7 +158,7 @@ void clearChangeFlag();
     /**
      * Debounce period in milliseconds.
      */
-    static const unsigned long DEBOUNCE_DELAY = 50;
+    static const unsigned long DEBOUNCE_DELAY = 60;
 
     /**
      * This structure encompasses information relating to an individual button.

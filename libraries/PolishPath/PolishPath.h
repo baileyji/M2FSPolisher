@@ -33,9 +33,13 @@ class PolishPath {
         vec2d_t current;
         vec2d_t startpos;
         vec2d_t finalpos;
-        unsigned int timeLeft;
+        double timeLeft;
         unsigned int pathLength;
         unsigned int finali;
+        unsigned int _i;
+    
+        bool autonextpath;
+        bool skipstartpause;
     
         //Return the velocity vector toward the currentGoal from the present position
         vec2d_t vTowardGoal(vec2d_t pos, double speed);
@@ -55,25 +59,24 @@ class PolishPath {
         //Virtual
         virtual vec2d_t computePathPos();
         virtual bool isMore();  //Is the current goal the final positon
-
-    protected:
-        unsigned int _i;
-
+        virtual void print();
     
 };
 
 
 class LemPath : public PolishPath {
     public:
-        LemPath(char namestr[], vec2dint_t maxpos, char pass, double xskew, double halfamp); // in units of counts!
+        LemPath(char namestr[], vec2dint_t maxpos, char pass, double xskew, double halfamp, bool ifu); // in units of counts!
         virtual bool isMore();  //Is the current goal the final positon
         virtual vec2d_t computePathPos();
+        virtual void print();
         double awavenum;  //angualr wave number 2pi/period
         double nlem;
         int dir;
         double lemsize;
         double xstretch;
-
+        unsigned int pathpass;
+    
 };
 
 class LinePath : public PolishPath {

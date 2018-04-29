@@ -27,10 +27,10 @@ typedef struct VECTOR2D_INT32 {
 /*
  DIO 0-53
 
- Serial: 0 (RX) and 1 (TX)      Qik
- Serial1: 19 (RX) and 18 (TX)   LCD
+ Serial: 0 (RX) and 1 (TX)  USB-SERIAL (programming)
+ Serial1: 19 (RX) and 18 (TX) Qik
  Serial2: 17 (RX) and 16 (TX)
- Serial3: 15 (RX) and 14 (TX)  USB-SERIAL
+ Serial3: 15 (RX) and 14 (TX) LCD
  SerialUSB
  LED 13
  
@@ -43,22 +43,32 @@ typedef struct VECTOR2D_INT32 {
  Tuning: use tuning code
  */
 
-#define QIK_ERROR_PIN 2
-#define QIK_RESET_PIN 3
-#define X_QUADA_PIN 4
-#define X_QUADB_PIN 5
-#define Y_QUADA_PIN 6
-#define Y_QUADB_PIN 7
-#define LEFT_BUTTON_PIN 8
-#define RIGHT_BUTTON_PIN 9
-#define NEG_X_LIM_PIN 20
-#define NEG_Y_LIM_PIN 21
-#define POS_X_LIM_PIN 22
-#define POS_Y_LIM_PIN 23
-#define OK_BUTTON_PIN 24
-#define ESTOP_BUTTON_PIN 25
-#define SPEED_PIN A0
+
+//quad pins 26,28,34,36
+//qik pins err 40 rst 42
+//limits 23,25,27,29
+
+
+#define QIK_ERROR_PIN 40
+#define QIK_RESET_PIN 42
+#define X_QUADA_PIN 34
+#define X_QUADB_PIN 36
+#define Y_QUADA_PIN 26
+#define Y_QUADB_PIN 28
+
+#define LEFT_BUTTON_PIN 9
+#define RIGHT_BUTTON_PIN 11
+#define OK_BUTTON_PIN 10
+#define ESTOP_BUTTON_PIN 12
 #define LED_PIN 13
+
+#define NEG_X_LIM_PIN 23
+#define NEG_Y_LIM_PIN 25
+#define POS_X_LIM_PIN 27
+#define POS_Y_LIM_PIN 29
+
+#define SPEED_PIN A0
+
 
 #define QIK_BAUD_RATE 115200
 #define QIK_MIN_SPEED -127
@@ -107,7 +117,7 @@ typedef struct VECTOR2D_INT32 {
 //Hardware (encoders, motor driver, buttons, LCD, LED)
 LEDEffect led(LED_PIN);
 PololuQik2s12v10 Qik = PololuQik2s12v10(QIK_RESET_PIN, QIK_ERROR_PIN);
-LCD2 lcddisplay = LCD2(&Serial1);
+LCD2 lcddisplay = LCD2(&Serial3);
 Encoder xQuad = Encoder(X_QUADA_PIN, X_QUADB_PIN);
 Encoder yQuad = Encoder(Y_QUADA_PIN, Y_QUADB_PIN);
 enum Button {NXLIM, NYLIM, PXLIM, PYLIM, OK, ESTOP, LEFT, RIGHT};
@@ -248,9 +258,10 @@ int freeMemory() {
 Setup
 */////////////////////////////////////////////////////////////////////////////////
 void setup() {
-    
+
+    SerialUSB.begin(2000000);
     //Configure LCD
-    Serial1.begin(9600);
+    Serial3.begin(9600);
     lcddisplay.init();
     delay(500); //required by display
     lcddisplay.display(F("Booting..."));
@@ -259,7 +270,7 @@ void setup() {
     Buttons.begin(ButtonPins, 8);
     
     //Connect to Qik
-    Qik.init(QIK_BAUD_RATE);
+    //Qik.init(QIK_BAUD_RATE);
 
     ///Configure pid objects
     xPID.SetOutputLimits(QIK_MIN_SPEED, QIK_MAX_SPEED);
@@ -273,7 +284,6 @@ void setup() {
     speedSetting = readSpeed();
     
     //Setup SerialUSB
-    SerialUSB.begin(115200);
     cmdIO.SetDefaultHandler(cmd_unrecognized);
     cmdIO.AddCommand(&cmd_report);
     cmdIO.AddCommand(&cmd_decel);
@@ -295,7 +305,7 @@ Main Loop
 */////////////////////////////////////////////////////////////////////////////////
 void loop() {
     
-    unsigned long tic, loopTic, housekeeepingTic=0, timeSincePosvel=millis();
+    unsigned long tic, loopTic, housekeeepingTic=0, timeSincePosvel=millis(), printTic;
     bool pidWillRun;
     
     loopTic = micros();
@@ -312,7 +322,7 @@ void loop() {
         bounceOffLimits();
         enterFail(LIMITS);
     }
-    if (softLimitsTripped())
+    if (calibrated && softLimitsTripped())
         enterIdleSoftLimits();
     
     //LED
@@ -348,6 +358,11 @@ void loop() {
         qikcurrent.x=Qik.getM0CurrentMilliamps();
         qikcurrent.y=Qik.getM1CurrentMilliamps();
         housekeeepingTic=loopTic;
+    }
+
+    if ((printTic - loopTic) > 2000000) {
+      report(&SerialUSB);
+      printTic=micros();
     }
     
     //Update Display

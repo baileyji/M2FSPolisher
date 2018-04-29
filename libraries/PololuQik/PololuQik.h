@@ -64,6 +64,10 @@ class PololuQik
     void setM0Speed(int speed);
     void setM1Speed(int speed);
     void setSpeeds(int m0Speed, int m1Speed);
+    
+    void reset();
+    
+    bool isError();
 
   protected:
     unsigned char _resetPin;

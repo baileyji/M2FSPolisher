@@ -2,6 +2,12 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:/Users/one/Dropbox/M2FS-Dropbox/Polisher/Mark2/Arduino/path.py">
+   </FileRef>
+   <FileRef
+      location = "group:polisher_simple">
+   </FileRef>
+   <FileRef
       location = "group:libraries">
    </FileRef>
    <FileRef

@@ -8,9 +8,12 @@ LCD2::LCD2(Stream* serialptr)
 
 void LCD2::init()
 {
+    
+    delay(550);  //500 required but not enough
     turnDisplayOn();
-    backlight(29);
-    underlineCursorOn();
+    backlight(15);
+    underlineCursorOff();
+    boxCursorOff();
     clearScreen();
 }
 
@@ -75,6 +78,7 @@ void LCD2::turnDisplayOn()
     //this turns the dispaly back ON
     serial->write(0xFE); //command flag
     serial->write(12); // 0x0C
+    delay(500); // behavior seems odd without
 }
 
 void LCD2::underlineCursorOn()
@@ -113,13 +117,30 @@ void LCD2::toggleSplash()
     serial->write(9); // 0x09
 }
 
-void LCD2::backlight(unsigned int brightness)// 0 = OFF, 29 = Fully ON, everything inbetween = varied brightnbess
+void LCD2::saveSplash()
 {
-    brightness = (brightness>29) ? 29:brightness;
+    serial->write(0x7C);
+    serial->write(0x0A);
+}
+
+void LCD2::bootbaudreset() {
+    serial->write(0x12);
+}
+
+void LCD2::setbaud9600() {
+    serial->write(124);
+    serial->write(0x0D);
+}
+
+void LCD2::backlight(char brightness)// 0 = OFF, 29 = Fully ON, everything inbetween = varied brightnbess
+{
+    char bri;
+    bri = (brightness>29) ? 157 : brightness+128;
         
     //this function takes an int between 128-157 and turns the backlight on accordingly
     serial->write(0x7C); //NOTE THE DIFFERENT COMMAND FLAG = 124 dec
-    serial->write(brightness+128); // any value between 128 and 157 or 0x80 and 0x9D
+    serial->write(bri); // any value between 128 and 157 or 0x80 and 0x9D
+    delay(50);  //Odd behavior with future calls w/o a delay here
 }
 
 
@@ -140,8 +161,20 @@ void LCD2::print(char cstr[])
     serial->print(cstr);
 }
 
+void LCD2::print2(char cstr[])
+{
+    selectLineTwo();
+    serial->print(cstr);
+}
+
 void LCD2::print(const __FlashStringHelper *str)
 {
+    serial->print(str);
+}
+
+void LCD2::print2(const __FlashStringHelper *str)
+{
+    selectLineTwo();
     serial->print(str);
 }
 
@@ -151,6 +184,7 @@ void LCD2::display(const __FlashStringHelper *str)
     selectLineOne();
     serial->print(str);
 }
+
 
 void LCD2::clear()
 {

@@ -16,38 +16,46 @@ void PololuQik::init(long speed /* = 9600 */)
   digitalWrite(_errorPin, LOW);
 
   // reset the qik
-  digitalWrite(_resetPin, LOW);
-  pinMode(_resetPin, OUTPUT); // drive low
-  delay(1);
-  pinMode(_resetPin, INPUT); // return to high-impedance input (reset is internally pulled up on qik)
-  delay(10);
+  reset();
   
-//  Serial.end();
-  Serial.begin(speed);
-  Serial.write(0xAA); // allow qik to autodetect baud rate
+//  Serial1.end();
+  Serial1.begin(speed);
+  Serial1.write(0xAA); // allow qik to autodetect baud rate
+}
+
+void PololuQik::reset() {
+    digitalWrite(_resetPin, LOW);
+    pinMode(_resetPin, OUTPUT); // drive low
+    delay(1);
+    pinMode(_resetPin, INPUT); // return to high-impedance input (reset is internally pulled up on qik)
+    delay(10);
+}
+
+bool PololuQik::isError() {
+    return digitalRead(_errorPin);
 }
 
 char PololuQik::getFirmwareVersion()
 {
-  Serial.write(QIK_GET_FIRMWARE_VERSION);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(QIK_GET_FIRMWARE_VERSION);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 byte PololuQik::getErrors()
 {
-  Serial.write(QIK_GET_ERROR_BYTE);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(QIK_GET_ERROR_BYTE);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 byte PololuQik::getConfigurationParameter(byte parameter)
 {
   cmd[0] = QIK_GET_CONFIGURATION_PARAMETER;
   cmd[1] = parameter;
-  Serial.write(cmd, 2);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(cmd, 2);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 byte PololuQik::setConfigurationParameter(byte parameter, byte value)
@@ -58,9 +66,9 @@ byte PololuQik::setConfigurationParameter(byte parameter, byte value)
   cmd[2] = value;
   cmd[3] = 0x55;
   cmd[4] = 0x2A;
-  Serial.write(cmd, 5);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(cmd, 5);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 void PololuQik::setM0Speed(int speed)
@@ -88,7 +96,7 @@ void PololuQik::setM0Speed(int speed)
     cmd[1] = speed;
   }
 
-  Serial.write(cmd, 2);
+  Serial1.write(cmd, 2);
 }
 
 void PololuQik::setM1Speed(int speed)
@@ -116,7 +124,7 @@ void PololuQik::setM1Speed(int speed)
     cmd[1] = speed;
   }
     
-  Serial.write(cmd, 2);
+  Serial1.write(cmd, 2);
 }
 
 void PololuQik::setSpeeds(int m0Speed, int m1Speed)
@@ -133,7 +141,7 @@ void PololuQik2s12v10::setM0Brake(unsigned char brake)
   
   cmd[0] = QIK_2S12V10_MOTOR_M0_BRAKE;
   cmd[1] = brake;
-  Serial.write(cmd, 2);
+  Serial1.write(cmd, 2);
 }
 
 void PololuQik2s12v10::setM1Brake(unsigned char brake)
@@ -143,7 +151,7 @@ void PololuQik2s12v10::setM1Brake(unsigned char brake)
   
   cmd[0] = QIK_2S12V10_MOTOR_M1_BRAKE;
   cmd[1] = brake;
-  Serial.write(cmd, 2);
+  Serial1.write(cmd, 2);
 }
 
 void PololuQik2s12v10::setBrakes(unsigned char m0Brake, unsigned char m1Brake)
@@ -154,16 +162,16 @@ void PololuQik2s12v10::setBrakes(unsigned char m0Brake, unsigned char m1Brake)
 
 unsigned char PololuQik2s12v10::getM0Current()
 {
-  Serial.write(QIK_2S12V10_GET_MOTOR_M0_CURRENT);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(QIK_2S12V10_GET_MOTOR_M0_CURRENT);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 unsigned char PololuQik2s12v10::getM1Current()
 {
-  Serial.write(QIK_2S12V10_GET_MOTOR_M1_CURRENT);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(QIK_2S12V10_GET_MOTOR_M1_CURRENT);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 unsigned int PololuQik2s12v10::getM0CurrentMilliamps()
@@ -178,14 +186,14 @@ unsigned int PololuQik2s12v10::getM1CurrentMilliamps()
 
 unsigned char PololuQik2s12v10::getM0Speed()
 {
-  Serial.write(QIK_2S12V10_GET_MOTOR_M0_SPEED);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(QIK_2S12V10_GET_MOTOR_M0_SPEED);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
 
 unsigned char PololuQik2s12v10::getM1Speed()
 {
-  Serial.write(QIK_2S12V10_GET_MOTOR_M1_SPEED);
-  while (Serial.available() < 1);
-  return Serial.read();
+  Serial1.write(QIK_2S12V10_GET_MOTOR_M1_SPEED);
+  while (Serial1.available() < 1);
+  return Serial1.read();
 }
