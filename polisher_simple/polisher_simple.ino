@@ -1165,7 +1165,7 @@ void ehalt() {
 bool calibrate() {
     
     vec2d_t pos;
-    int calspeed = round(CALIBRATE_SPEED*SPEED_TO_QIK_X);
+    int calspeed = min(round(CALIBRATE_SPEED*SPEED_TO_QIK_X), readSpeed());
     Buttons.clearChangeFlag(ESTOP);
 
     /*
